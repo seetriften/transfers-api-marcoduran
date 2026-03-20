@@ -12,6 +12,19 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: transfers-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: transfers_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   app:
     image: transfers-api:0.1.0
     build:
@@ -20,12 +33,14 @@ services:
     container_name: transfers-api
     depends_on:
       - mongodb
+      - postgres
     ports:
       - "8080:8080"
 
     environment:
       # ---- Business ----
       TRANSFER_MIN_AMOUNT: 1
+      STORAGE_ENGINE: ${STORAGE_ENGINE:-postgres}
 
       # ---- Mongo ----
       MONGODB_CONNECT_TIMEOUT: 10s
@@ -36,7 +51,17 @@ services:
       MONGODB_DATABASE: transfers-db
       MONGODB_COLLECTION: transfers
 
+      # ---- PostgreSQL ----
+      POSTGRES_CONNECT_TIMEOUT: 10s
+      POSTGRES_HOSTNAME: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: transfers_db
+      POSTGRES_SSL_MODE: disable
+
     restart: always
 
 volumes:
   mongo_data:
+  postgres_data:

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"transfers-api/internal/config"
 	"transfers-api/internal/handlers"
 	"transfers-api/internal/logging"
@@ -20,7 +21,15 @@ func main() {
 	logger.Infof("config loaded: %v", cfg.String())
 
 	// init repositories
-	transfersDB := repositories.NewTransfersMongoDBRepository(cfg.MongoDBConfig)
+	var transfersDB services.TransfersRepository
+	switch strings.ToLower(strings.TrimSpace(cfg.StorageConfig.Engine)) {
+	case "postgres", "postgresql":
+		transfersDB = repositories.NewTransfersPostgresRepository(cfg.PostgresqlDBConfig)
+		logger.Info("using PostgreSQL repository")
+	default:
+		transfersDB = repositories.NewTransfersMongoDBRepository(cfg.MongoDBConfig)
+		logger.Info("using MongoDB repository")
+	}
 	logger.Info("repositories created")
 
 	// init services
