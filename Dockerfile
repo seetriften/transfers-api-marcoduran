@@ -14,11 +14,11 @@ RUN CGO_ENABLED=0 go build -o app ./cmd/app
 
 
 # ---------- RUNTIME ----------
-FROM scratch
+FROM alpine:3.20
 
 WORKDIR /app
 
-COPY --from=builder /app/app .
+COPY --from=builder /app/app /app/app
 
 EXPOSE 8080
 

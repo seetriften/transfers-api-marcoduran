@@ -15,14 +15,9 @@
         "url": {
           "raw": "http://localhost:8080/transfers/699cd911efb8145086e1c690",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "transfers",
-            "699cd911efb8145086e1c690"
-          ]
+          "path": ["transfers", "699cd911efb8145086e1c690"]
         }
       },
       "response": [
@@ -34,14 +29,9 @@
             "url": {
               "raw": "http://localhost:8080/transfers/699cd911efb8145086e1c690",
               "protocol": "http",
-              "host": [
-                "localhost"
-              ],
+              "host": ["localhost"],
               "port": "8080",
-              "path": [
-                "transfers",
-                "699cd911efb8145086e1c690"
-              ]
+              "path": ["transfers", "699cd911efb8145086e1c690"]
             }
           },
           "status": "OK",
@@ -83,13 +73,9 @@
         "url": {
           "raw": "http://localhost:8080/transfers",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "transfers"
-          ]
+          "path": ["transfers"]
         }
       },
       "response": [
@@ -110,13 +96,9 @@
             "url": {
               "raw": "http://localhost:8080/transfers",
               "protocol": "http",
-              "host": [
-                "localhost"
-              ],
+              "host": ["localhost"],
               "port": "8080",
-              "path": [
-                "transfers"
-              ]
+              "path": ["transfers"]
             }
           },
           "status": "Created",
@@ -149,14 +131,9 @@
         "url": {
           "raw": "http://localhost:8080/transfers/699cd931efb8145086e1c691",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "transfers",
-            "699cd931efb8145086e1c691"
-          ]
+          "path": ["transfers", "699cd931efb8145086e1c691"]
         }
       },
       "response": [
@@ -168,14 +145,9 @@
             "url": {
               "raw": "http://localhost:8080/transfers/699cd931efb8145086e1c691",
               "protocol": "http",
-              "host": [
-                "localhost"
-              ],
+              "host": ["localhost"],
               "port": "8080",
-              "path": [
-                "transfers",
-                "699cd931efb8145086e1c691"
-              ]
+              "path": ["transfers", "699cd931efb8145086e1c691"]
             }
           },
           "status": "OK",
@@ -199,6 +171,21 @@
           "body": "{\n    \"id\": \"699cd931efb8145086e1c691\"\n}"
         }
       ]
+    },
+    {
+      "name": "List transfers by user",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users/7b52a8b8-d518-4be0-be42-de0931acad51/transfers",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "user-001", "transfers"]
+        },
+        "description": "Transfers donde el usuario es remitente o destinatario."
+      }
     }
   ]
 }

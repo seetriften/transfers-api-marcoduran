@@ -17,6 +17,7 @@ type TransfersRepository interface {
 	GetByID(ctx context.Context, id string) (models.Transfer, error)
 	Update(ctx context.Context, transfer models.Transfer) error
 	Delete(ctx context.Context, id string) error
+	ListByUserID(ctx context.Context, userID string) ([]models.Transfer, error)
 }
 
 type TransfersService struct {
@@ -84,4 +85,18 @@ func (s *TransfersService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("error deleting transfer %s from repository: %w", id, err)
 	}
 	return nil
+}
+
+func (s *TransfersService) ListByUserID(ctx context.Context, userID string) ([]models.Transfer, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, fmt.Errorf("user_id is required: %w", known_errors.ErrBadRequest)
+	}
+	transfers, err := s.transfersRepo.ListByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error listing transfers for user %s: %w", userID, err)
+	}
+	if transfers == nil {
+		return []models.Transfer{}, nil
+	}
+	return transfers, nil
 }

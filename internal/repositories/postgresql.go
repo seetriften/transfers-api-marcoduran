@@ -183,3 +183,34 @@ func (r *TransfersPostgresRepo) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *TransfersPostgresRepo) ListByUserID(ctx context.Context, userID string) ([]models.Transfer, error) {
+	const query = `
+	SELECT id, sender_id, receiver_id, currency, amount, state
+	FROM transfers
+	WHERE sender_id = $1 OR receiver_id = $1
+	ORDER BY id`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error listing transfers by user: %w", err)
+	}
+	defer rows.Close()
+
+	var out []models.Transfer
+	for rows.Next() {
+		var t models.Transfer
+		var currency string
+		if err := rows.Scan(&t.ID, &t.SenderID, &t.ReceiverID, &currency, &t.Amount, &t.State); err != nil {
+			return nil, fmt.Errorf("error scanning transfer row: %w", err)
+		}
+		t.Currency = enums.ParseCurrency(currency)
+		out = append(out, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating transfers: %w", err)
+	}
+	if out == nil {
+		out = []models.Transfer{}
+	}
+	return out, nil
+}
