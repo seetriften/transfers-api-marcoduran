@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Business       BusinessConfig `json:"business"`
-	StorageConfig  Storage        `json:"storage"`
-	MongoDBConfig  MongoDB        `json:"mongodb"`
-	PostgresqlDBConfig PostgresqlDB `json:"postgres"`
+	Business           BusinessConfig `json:"business"`
+	StorageConfig      Storage        `json:"storage"`
+	MongoDBConfig      MongoDB        `json:"mongodb"`
+	PostgresqlDBConfig PostgresqlDB   `json:"postgres"`
+	CacheConfig        Cache          `json:"cache"`
 }
 
 type BusinessConfig struct {
@@ -43,6 +44,13 @@ type PostgresqlDB struct {
 	SSLMode        string        `env:"POSTGRES_SSL_MODE" envDefault:"disable" json:"ssl_mode"`
 }
 
+type Cache struct {
+	ConnectTimeout time.Duration `env:"CACHE_CONNECT_TIMEOUT" envDefault:"10s" json:"connect_timeout"`
+	Enabled        bool          `env:"CACHE_ENABLED" envDefault:"false" json:"enabled"`
+	Host           string        `env:"CACHE_HOST" envDefault:"localhost" json:"host"`
+	Port           int           `env:"CACHE_PORT" envDefault:"11211" json:"port"`
+}
+
 func ParseFromEnv() *Config {
 	var cfg Config
 	for _, nested := range []interface{}{
@@ -50,6 +58,7 @@ func ParseFromEnv() *Config {
 		&cfg.StorageConfig,
 		&cfg.MongoDBConfig,
 		&cfg.PostgresqlDBConfig,
+		&cfg.CacheConfig,
 	} {
 		if err := env.Parse(nested); err != nil {
 			logging.Logger.Fatalf("error parsing config: %v", err)

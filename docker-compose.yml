@@ -25,6 +25,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: transfers-memcached
+    restart: always
+    ports:
+      - "11211:11211"
+    command: ["memcached", "-m", "64", "-I", "4m"]
+    volumes:
+      - memcached_data:/data
+
   app:
     image: transfers-api:0.1.0
     build:
@@ -34,6 +44,7 @@ services:
     depends_on:
       - mongodb
       - postgres
+      - memcached
     ports:
       - "8080:8080"
 
@@ -60,8 +71,15 @@ services:
       POSTGRES_DATABASE: transfers_db
       POSTGRES_SSL_MODE: disable
 
+      # ---- Memcached (cache-aside en el servicio) ----
+      CACHE_ENABLED: "true"
+      CACHE_HOST: memcached
+      CACHE_PORT: 11211
+      CACHE_CONNECT_TIMEOUT: 5s
+
     restart: always
 
 volumes:
   mongo_data:
   postgres_data:
+  memcached_data:

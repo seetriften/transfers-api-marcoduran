@@ -3,6 +3,7 @@ module transfers-api
 go 1.25.7
 
 require (
+	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/google/uuid v1.6.0

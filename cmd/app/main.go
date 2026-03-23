@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"strings"
+
+	"transfers-api/internal/cache"
 	"transfers-api/internal/config"
 	"transfers-api/internal/handlers"
 	"transfers-api/internal/logging"
@@ -32,8 +35,17 @@ func main() {
 	}
 	logger.Info("repositories created")
 
+	var transfersCache cache.Cache
+	if cfg.CacheConfig.Enabled {
+		addr := fmt.Sprintf("%s:%d", cfg.CacheConfig.Host, cfg.CacheConfig.Port)
+		transfersCache = cache.NewMemcached(addr, cfg.CacheConfig.ConnectTimeout)
+		logger.Infof("cache enabled (memcached at %s)", addr)
+	} else {
+		logger.Info("cache disabled (set CACHE_ENABLED=true to use Memcached)")
+	}
+
 	// init services
-	transfersService := services.NewTransfersService(cfg.Business, transfersDB)
+	transfersService := services.NewTransfersService(cfg.Business, transfersDB, transfersCache)
 	logger.Infof("services created")
 
 	// init handlers

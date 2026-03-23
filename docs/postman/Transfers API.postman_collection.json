@@ -178,7 +178,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/users/7b52a8b8-d518-4be0-be42-de0931acad51/transfers",
+          "raw": "{{localhost}}/users/{{user-id}}/transfers",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
