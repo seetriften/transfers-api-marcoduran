@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o app ./cmd/app
+RUN CGO_ENABLED=0 go build -o app ./cmd/app && CGO_ENABLED=0 go build -o worker ./cmd/worker
 
 
 # ---------- RUNTIME ----------
@@ -19,6 +19,7 @@ FROM alpine:3.20
 WORKDIR /app
 
 COPY --from=builder /app/app /app/app
+COPY --from=builder /app/worker /app/worker
 
 EXPOSE 8080
 

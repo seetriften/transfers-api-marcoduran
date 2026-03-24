@@ -8,6 +8,7 @@ import (
 	"transfers-api/internal/config"
 	"transfers-api/internal/handlers"
 	"transfers-api/internal/logging"
+	"transfers-api/internal/messaging"
 	"transfers-api/internal/repositories"
 	"transfers-api/internal/services"
 	"transfers-api/internal/transport"
@@ -23,9 +24,11 @@ func main() {
 	cfg := config.ParseFromEnv()
 	logger.Infof("config loaded: %v", cfg.String())
 
+	engine := strings.ToLower(strings.TrimSpace(cfg.StorageConfig.Engine))
+
 	// init repositories
 	var transfersDB services.TransfersRepository
-	switch strings.ToLower(strings.TrimSpace(cfg.StorageConfig.Engine)) {
+	switch engine {
 	case "postgres", "postgresql":
 		transfersDB = repositories.NewTransfersPostgresRepository(cfg.PostgresqlDBConfig)
 		logger.Info("using PostgreSQL repository")
@@ -44,8 +47,27 @@ func main() {
 		logger.Info("cache disabled (set CACHE_ENABLED=true to use Memcached)")
 	}
 
+	var bus messaging.Publisher
+	if cfg.RabbitMQConfig.Enabled {
+		pub, err := messaging.NewRabbitMQPublisher(cfg.RabbitMQConfig)
+		if err != nil {
+			logging.Logger.Fatalf("rabbitmq: %v", err)
+		}
+		bus = pub
+		defer func() {
+			if err := pub.Close(); err != nil {
+				logger.Warnf("rabbitmq close: %v", err)
+			}
+		}()
+		logger.Infof("rabbitmq publisher enabled (queue=%s)", cfg.RabbitMQConfig.Queue)
+	} else {
+		logger.Info("rabbitmq disabled (set RABBITMQ_ENABLED=true)")
+	}
+
+	eventFirstPostgres := cfg.EventFirstPostgres && (engine == "postgres" || engine == "postgresql")
+
 	// init services
-	transfersService := services.NewTransfersService(cfg.Business, transfersDB, transfersCache)
+	transfersService := services.NewTransfersService(cfg.Business, transfersDB, transfersCache, bus, eventFirstPostgres)
 	logger.Infof("services created")
 
 	// init handlers

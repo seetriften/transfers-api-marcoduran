@@ -14,6 +14,8 @@ type Config struct {
 	MongoDBConfig      MongoDB        `json:"mongodb"`
 	PostgresqlDBConfig PostgresqlDB   `json:"postgres"`
 	CacheConfig        Cache          `json:"cache"`
+	RabbitMQConfig     RabbitMQ       `json:"rabbitmq"`
+	EventFirstPostgres bool           `env:"EVENT_FIRST_POSTGRES" envDefault:"false" json:"event_first_postgres"`
 }
 
 type BusinessConfig struct {
@@ -51,18 +53,21 @@ type Cache struct {
 	Port           int           `env:"CACHE_PORT" envDefault:"11211" json:"port"`
 }
 
+type RabbitMQ struct {
+	ConnectTimeout time.Duration `env:"RABBITMQ_CONNECT_TIMEOUT" envDefault:"10s" json:"connect_timeout"`
+	Enabled        bool          `env:"RABBITMQ_ENABLED" envDefault:"false" json:"enabled"`
+	Hostname       string        `env:"RABBITMQ_HOSTNAME" envDefault:"localhost" json:"hostname"`
+	Port           int           `env:"RABBITMQ_PORT" envDefault:"5672" json:"port"`
+	Username       string        `env:"RABBITMQ_USERNAME" envDefault:"guest" json:"username"`
+	Password       string        `env:"RABBITMQ_PASSWORD" envDefault:"guest" json:"password"`
+	VHost          string        `env:"RABBITMQ_VHOST" envDefault:"/" json:"vhost"`
+	Queue          string        `env:"RABBITMQ_QUEUE" envDefault:"transfers.events" json:"queue"`
+}
+
 func ParseFromEnv() *Config {
 	var cfg Config
-	for _, nested := range []interface{}{
-		&cfg.Business,
-		&cfg.StorageConfig,
-		&cfg.MongoDBConfig,
-		&cfg.PostgresqlDBConfig,
-		&cfg.CacheConfig,
-	} {
-		if err := env.Parse(nested); err != nil {
-			logging.Logger.Fatalf("error parsing config: %v", err)
-		}
+	if err := env.Parse(&cfg); err != nil {
+		logging.Logger.Fatalf("error parsing config: %v", err)
 	}
 	return &cfg
 }

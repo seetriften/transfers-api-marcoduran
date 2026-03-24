@@ -35,6 +35,25 @@ services:
     volumes:
       - memcached_data:/data
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: transfers-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
   app:
     image: transfers-api:0.1.0
     build:
@@ -42,9 +61,14 @@ services:
       dockerfile: Dockerfile
     container_name: transfers-api
     depends_on:
-      - mongodb
-      - postgres
-      - memcached
+      mongodb:
+        condition: service_started
+      postgres:
+        condition: service_started
+      memcached:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8080:8080"
 
@@ -77,9 +101,69 @@ services:
       CACHE_PORT: 11211
       CACHE_CONNECT_TIMEOUT: 5s
 
+      # ---- RabbitMQ (eventos transfer.*) ----
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_CONNECT_TIMEOUT: 10s
+      RABBITMQ_HOSTNAME: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_VHOST: /
+      RABBITMQ_QUEUE: transfers.events
+
+      EVENT_FIRST_POSTGRES: "true"
+
+    restart: always
+
+  worker:
+    image: transfers-api:0.1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transfers-worker
+    command: ["/app/worker"]
+    depends_on:
+      mongodb:
+        condition: service_started
+      postgres:
+        condition: service_started
+      memcached:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      TRANSFER_MIN_AMOUNT: 1
+      STORAGE_ENGINE: ${STORAGE_ENGINE:-postgres}
+      MONGODB_CONNECT_TIMEOUT: 10s
+      MONGODB_HOSTNAME: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_USERNAME: root
+      MONGODB_PASSWORD: root
+      MONGODB_DATABASE: transfers-db
+      MONGODB_COLLECTION: transfers
+      POSTGRES_CONNECT_TIMEOUT: 10s
+      POSTGRES_HOSTNAME: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: transfers_db
+      POSTGRES_SSL_MODE: disable
+      CACHE_ENABLED: "true"
+      CACHE_HOST: memcached
+      CACHE_PORT: 11211
+      CACHE_CONNECT_TIMEOUT: 5s
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_CONNECT_TIMEOUT: 10s
+      RABBITMQ_HOSTNAME: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_VHOST: /
+      RABBITMQ_QUEUE: transfers.events
     restart: always
 
 volumes:
   mongo_data:
   postgres_data:
   memcached_data:
+  rabbitmq_data:

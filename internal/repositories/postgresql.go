@@ -61,10 +61,19 @@ CREATE TABLE IF NOT EXISTS transfers (
 }
 
 func (r *TransfersPostgresRepo) Create(ctx context.Context, transfer models.Transfer) (string, error) {
-	id := uuid.NewString()
+	id := strings.TrimSpace(transfer.ID)
+	if id == "" {
+		id = uuid.NewString()
+	} else {
+		if _, err := uuid.Parse(id); err != nil {
+			return "", fmt.Errorf("error parsing transfer ID %s: %s: %w", transfer.ID, err.Error(), known_errors.ErrBadRequest)
+		}
+	}
+
 	const query = `
-INSERT INTO transfers (id, sender_id, receiver_id, currency, amount, state)
-VALUES ($1, $2, $3, $4, $5, $6)`
+	INSERT INTO transfers (id, sender_id, receiver_id, currency, amount, state)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	ON CONFLICT (id) DO NOTHING`
 	_, err := r.db.ExecContext(ctx, query,
 		id,
 		transfer.SenderID,
